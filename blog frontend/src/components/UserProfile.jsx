@@ -8,15 +8,11 @@ import {
   articleGrid,
   articleCardClass,
   articleTitle,
-  articleBody,
-  ghostBtn,
+  articleExcerpt,
   loadingClass,
   errorClass,
   timestampClass,
-  headingClass,
-  mutedText,
-  primaryBtn,
-  divider,
+  tagClass,
 } from "../styles/common.js";
 
 function UserProfile() {
@@ -33,7 +29,6 @@ function UserProfile() {
       setLoading(true);
       try {
         const res = await userAPI.getAllArticles();
-
         setArticles(res.data.payload);
       } catch (err) {
         setError(err.response?.data?.error || "Something went wrong");
@@ -41,18 +36,14 @@ function UserProfile() {
         setLoading(false);
       }
     };
-
     getArticles();
   }, []);
 
-  // convert UTC → IST
-  const formatDateIST = (date) => {
-    return new Date(date).toLocaleString("en-IN", {
+  const formatDateIST = (date) =>
+    new Date(date).toLocaleString("en-IN", {
       timeZone: "Asia/Kolkata",
       dateStyle: "medium",
-      timeStyle: "short",
     });
-  };
 
   const onLogout = async () => {
     await logout();
@@ -60,69 +51,153 @@ function UserProfile() {
     navigate("/login");
   };
 
-  const navigateToArticleByID = (articleObj) => {
-    navigate(`/article/${articleObj._id}`, {
-      state: articleObj,
-    });
+  const navigateToArticle = (articleObj) => {
+    navigate(`/article/${articleObj._id}`, { state: articleObj });
   };
 
-  if (loading) {
-    return <p className={loadingClass}>Loading articles...</p>;
-  }
+  if (loading) return <p className={loadingClass}>Loading your dashboard...</p>;
+
+  const totalComments = articles.reduce(
+    (sum, a) => sum + (a.comments?.length || 0),
+    0
+  );
 
   return (
-    <div>
-      {error && <p className={errorClass}>{error}</p>}
-
-      {/* User Info Card */}
-      <div className="bg-[#f5f5f7] rounded-2xl p-7 mt-6 mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-5">
-          {user?.profileImageUrl ? (
-            <img
-              src={user.profileImageUrl}
-              alt={user.firstName}
-              className="w-16 h-16 rounded-full object-cover border-2 border-[#d2d2d7]"
-            />
-          ) : (
-            <span className="w-16 h-16 rounded-full bg-[#0066cc] text-white text-xl font-bold flex items-center justify-center">
-              {user?.firstName?.[0]?.toUpperCase() || "U"}
-            </span>
-          )}
-          <div>
-            <p className={headingClass}>
-              {user?.firstName} {user?.lastName}
-            </p>
-            <p className={mutedText}>{user?.email}</p>
-            <span className="inline-block mt-1.5 text-[0.65rem] font-semibold text-[#0066cc] uppercase tracking-widest bg-[#0066cc]/[0.08] px-2.5 py-0.5 rounded-full">
-              {user?.role}
-            </span>
-          </div>
-        </div>
-        <button className={primaryBtn} onClick={onLogout}>
-          Logout
-        </button>
-      </div>
-
-      <div className={articleGrid}>
-        {articles.map((articleObj) => (
-          <div className={articleCardClass} key={articleObj._id}>
-            <div className="flex flex-col h-full">
-              {/* Top Content */}
-              <div>
-                <p className={articleTitle}>{articleObj.title}</p>
-
-                <p>{articleObj.content.slice(0, 20)}...</p>
-
-                <p className={timestampClass}>{formatDateIST(articleObj.createdAt)}</p>
+    <div className="bg-[#FEFAE0] min-h-screen">
+      {/* ── Profile Banner ───────────────────────────── */}
+      <div className="bg-gradient-to-r from-[#283618] to-[#606C38] py-10 px-4 sm:px-8">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="flex items-center gap-5">
+            {user?.profileImageUrl ? (
+              <img
+                src={user.profileImageUrl}
+                alt={user.firstName}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-[#DDA15E] shadow-lg"
+              />
+            ) : (
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#DDA15E] text-white text-2xl font-bold flex items-center justify-center shadow-lg border-4 border-white/30">
+                {user?.firstName?.[0]?.toUpperCase() || "U"}
               </div>
-
-              {/* Button at bottom */}
-              <button className={`${ghostBtn} mt-auto pt-4`} onClick={() => navigateToArticleByID(articleObj)}>
-                Read Article →
-              </button>
+            )}
+            <div>
+              <p className="text-[#DDA15E] text-xs font-semibold uppercase tracking-widest mb-1">
+                Reader Dashboard
+              </p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                Welcome back, {user?.firstName}!
+              </h1>
+              <p className="text-white/60 text-sm mt-0.5">{user?.email}</p>
             </div>
           </div>
-        ))}
+          <button
+            onClick={onLogout}
+            className="self-start sm:self-auto text-sm font-semibold px-5 py-2 bg-white/10 border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all duration-200"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      {/* ── Stats Row ────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 -mt-6 mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {[
+            { label: "Articles Available", value: articles.length },
+            { label: "Total Comments", value: totalComments },
+            { label: "Role", value: "Reader" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-white rounded-2xl px-6 py-5 border border-[#E5DDD0] shadow-sm"
+            >
+              <p className="text-2xl sm:text-3xl font-bold text-[#606C38]">
+                {stat.value}
+              </p>
+              <p className="text-xs text-[#9CA3AF] mt-1">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Articles ─────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 pb-16">
+        {error && <p className={`${errorClass} mb-6`}>{error}</p>}
+
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#283618]">
+            Discover Articles
+          </h2>
+          <span className="text-sm text-[#9CA3AF]">
+            {articles.length} articles
+          </span>
+        </div>
+
+        {articles.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-[#E5DDD0]">
+            <p className="text-5xl mb-4">📖</p>
+            <p className="text-lg font-semibold text-[#283618] mb-2">
+              No articles yet
+            </p>
+            <p className="text-sm text-[#9CA3AF]">
+              Check back soon for new content from our authors!
+            </p>
+          </div>
+        ) : (
+          <div className={articleGrid}>
+            {articles.map((articleObj) => (
+              <div
+                key={articleObj._id}
+                className={`${articleCardClass} p-6 group cursor-pointer`}
+                onClick={() => navigateToArticle(articleObj)}
+              >
+                {/* Top Row */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className={tagClass}>{articleObj.category}</span>
+                  <span className={timestampClass}>
+                    {formatDateIST(articleObj.createdAt)}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h3
+                  className={`${articleTitle} group-hover:text-[#606C38] transition-colors line-clamp-2`}
+                >
+                  {articleObj.title}
+                </h3>
+
+                {/* Excerpt */}
+                <p className={`${articleExcerpt} line-clamp-3 my-3`}>
+                  {articleObj.content.slice(0, 120)}...
+                </p>
+
+                {/* Author & Comments */}
+                <div className="text-xs text-[#9CA3AF] mb-4 flex items-center gap-2">
+                  <span>by {articleObj.author?.firstName || "Author"}</span>
+                  {articleObj.comments?.length > 0 && (
+                    <>
+                      <span>•</span>
+                      <span>{articleObj.comments.length} comments</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Read More */}
+                <button
+                  className="text-sm font-semibold text-[#606C38] hover:text-[#BC6C25] transition-colors inline-flex items-center gap-1 group/btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateToArticle(articleObj);
+                  }}
+                >
+                  Continue Reading
+                  <span className="group-hover/btn:translate-x-1 transition-transform">
+                    →
+                  </span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

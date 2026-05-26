@@ -38,12 +38,17 @@ authorRoute.post(
 // 3. Create article
 // 2. Read articles of specific author
 authorRoute.get('/articles/:authorId', verifyToken('AUTHOR'), async (req, res) => {
-    const { authorId } = req.params;
-    let articles = await ArticleModel.find({ author: authorId, isArticleActive: true }).populate(
-        "author",
-        "firstName lastName"
-    );
-    res.status(200).json({ message: "Articles fetched", payload: articles });
+    try {
+        const { authorId } = req.params;
+        // Return ALL articles (active + deleted) so author can see and restore them
+        const articles = await ArticleModel.find({ author: authorId }).populate(
+            "author",
+            "firstName lastName"
+        );
+        res.status(200).json({ message: "Articles fetched", payload: articles });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 // 3. Create article

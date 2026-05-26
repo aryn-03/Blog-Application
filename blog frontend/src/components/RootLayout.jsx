@@ -10,12 +10,13 @@ function RootLayout() {
   useEffect(() => {
     checkAuth();
   }, []);
+
   return (
-    <div>
+    <div className="min-h-screen flex flex-col bg-[#FEFAE0]">
       <Header />
-      <div className="min-h-screen mx-4 sm:mx-36">
+      <main className="flex-1">
         <Outlet />
-      </div>
+      </main>
       <Footer />
     </div>
   );

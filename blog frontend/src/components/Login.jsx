@@ -1,22 +1,16 @@
 import { useForm } from "react-hook-form";
+import { NavLink, useNavigate } from "react-router";
+import { useAuth } from "../store/authStore";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+
 import {
-  pageBackground,
-  formCard,
-  formTitle,
   formGroup,
   labelClass,
   inputClass,
-  submitBtn,
   errorClass,
-  mutedText,
-  divider,
   linkClass,
 } from "../styles/common";
-import { NavLink } from "react-router";
-import { useAuth } from "../store/authStore";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { toast } from "react-hot-toast";
 
 function Login() {
   const { register, handleSubmit } = useForm();
@@ -24,20 +18,20 @@ function Login() {
   const login = useAuth((state) => state.login);
   const isAuthenticated = useAuth((state) => state.isAuthenticated);
   const currentUser = useAuth((state) => state.currentUser);
-  const error = useAuth((state) => state.error);
+  const authError = useAuth((state) => state.error);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  // console.log("Is Authenticated :", isAuthenticated);
-  // console.log("Current usr", currentUser);
- // console.log("error is ", error);
-  const onUserLogin = async (userCredObj) => {
-    await login(userCredObj);
+  const onUserLogin = async (creds) => {
+    setLoading(true);
+    await login(creds);
+    setLoading(false);
   };
 
   useEffect(() => {
     if (isAuthenticated) {
       if (currentUser.role === "USER") {
-        toast.success("Loggedin successfully");
+        toast.success("Logged in successfully");
         navigate("/user-profile");
       }
       if (currentUser.role === "AUTHOR") {
@@ -47,61 +41,103 @@ function Login() {
   }, [isAuthenticated, currentUser]);
 
   return (
-    <div className={`${pageBackground} flex items-center justify-center py-16 px-4`}>
-      <div className={formCard}>
-        {/* Title */}
-        <h2 className={formTitle}>Sign In</h2>
+    <div className="min-h-screen bg-[#FEFAE0] flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md">
+        {/* Brand mark */}
+        <div className="text-center mb-8">
+          <NavLink
+            to="/"
+            className="inline-flex items-center gap-2 text-xl font-bold text-[#606C38]"
+          >
+            <span className="text-2xl text-[#DDA15E]">✦</span>
+            MyBlog
+          </NavLink>
+        </div>
 
-        {/* error message */}
-        {error && <p className={errorClass}>{error}</p>}
-        <form onSubmit={handleSubmit(onUserLogin)}>
-          {/* Email */}
-          <div className={formGroup}>
-            <label className={labelClass}>Email</label>
-            <input type="email" {...register("email")} placeholder="you@example.com" className={inputClass} />
-          </div>
+        {/* Card */}
+        <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#E5DDD0]">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#283618] text-center mb-1">
+            Welcome back
+          </h1>
+          <p className="text-sm text-[#6B7280] text-center mb-8">
+            Sign in to your account to continue
+          </p>
 
-          {/* Password */}
-          <div className={formGroup}>
-            <label className={labelClass}>Password</label>
-            <input
-              type={showPassword ? "text" : "password"}
-              {...register("password")}
-              placeholder="••••••••"
-              className={inputClass}
-            />
-            <div className="mt-2 flex items-center gap-2">
+          {authError && (
+            <div className={`${errorClass} mb-6`}>{authError}</div>
+          )}
+
+          <form onSubmit={handleSubmit(onUserLogin)} className="space-y-0">
+            {/* Email */}
+            <div className={formGroup}>
+              <label className={labelClass}>Email Address</label>
               <input
-                id="loginShowPassword"
-                type="checkbox"
-                checked={showPassword}
-                onChange={() => setShowPassword((prev) => !prev)}
-                className="accent-violet-600 w-4 h-4"
+                id="loginEmail"
+                type="email"
+                {...register("email", { required: true })}
+                placeholder="your@email.com"
+                className={inputClass}
+                required
               />
-              <label htmlFor="loginShowPassword" className="text-sm text-stone-600">
-                Show password
-              </label>
             </div>
-          </div>
 
-          {/* Forgot password */}
-          {/* <div className="text-right -mt-2 mb-4">
-            <a href="/forgot-password" className={`${linkClass} text-xs`}>
-              Forgot password?
-            </a>
-          </div> */}
+            {/* Password */}
+            <div className={formGroup}>
+              <label className={labelClass}>Password</label>
+              <div className="relative">
+                <input
+                  id="loginPassword"
+                  type={showPassword ? "text" : "password"}
+                  {...register("password", { required: true })}
+                  placeholder="••••••••"
+                  className={inputClass}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#9CA3AF] hover:text-[#606C38] transition-colors"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
 
-          {/* Submit */}
-          <button type="submit" className={submitBtn}>
-            Sign In
-          </button>
-        </form>
+            {/* Submit */}
+            <button
+              id="loginSubmit"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#606C38] text-white font-semibold py-3 rounded-xl hover:bg-[#283618] transition-all duration-200 mt-2 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
+            </button>
+          </form>
 
-        {/* Footer note */}
-        <p className={`${mutedText} text-center mt-5`}>
-          Don't have an account?{" "}
-          <NavLink to="/register" className={linkClass}>
-            Create one
+          <div className="border-t border-[#E5DDD0] my-6" />
+
+          <p className="text-center text-sm text-[#6B7280]">
+            Don't have an account?{" "}
+            <NavLink
+              to="/register"
+              className={`${linkClass} font-semibold hover:underline`}
+            >
+              Create one
+            </NavLink>
+          </p>
+        </div>
+
+        {/* Back to home */}
+        <p className="text-center mt-6 text-xs text-[#9CA3AF]">
+          <NavLink to="/" className="hover:text-[#606C38] transition-colors">
+            ← Back to home
           </NavLink>
         </p>
       </div>
