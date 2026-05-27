@@ -10,7 +10,7 @@ import { commonRouter } from "./APIs/CommonApi.js";
 config(); //process.env
 
 // Support multiple allowed origins (comma-separated in env)
-const ALLOWED_ORIGINS = (process.env.FRONTEND_URL || "http://localhost:5173")
+const ALLOWED_ORIGINS = (process.env.FRONTEND_URL || "https://blog-application-liart-chi.vercel.app")
   .split(",")
   .map((o) => o.trim());
 
@@ -65,4 +65,4 @@ const connectDB = async () => {
   }
 };
 
-connectDB();
+connectDB();
