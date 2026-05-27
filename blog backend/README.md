@@ -122,7 +122,4 @@ Configured for deployment on Render. See `render.yaml` for deployment settings.
 ```bash
 npm run dev
 ```
-
-## License
-
-MIT License
+deployment link : https://blog-application-liart-chi.vercel.app/
