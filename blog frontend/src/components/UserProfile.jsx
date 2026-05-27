@@ -57,10 +57,12 @@ function UserProfile() {
 
   if (loading) return <p className={loadingClass}>Loading your dashboard...</p>;
 
-  const totalComments = articles.reduce(
-    (sum, a) => sum + (a.comments?.length || 0),
-    0
-  );
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "short",
+      })
+    : "Recent";
 
   return (
     <div className="bg-[#FEFAE0] min-h-screen">
@@ -103,7 +105,7 @@ function UserProfile() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[
             { label: "Articles Available", value: articles.length },
-            { label: "Total Comments", value: totalComments },
+            { label: "Member Since", value: memberSince },
             { label: "Role", value: "Reader" },
           ].map((stat) => (
             <div

@@ -43,7 +43,7 @@ authorRoute.get('/articles/:authorId', verifyToken('AUTHOR'), async (req, res) =
         // Return ALL articles (active + deleted) so author can see and restore them
         const articles = await ArticleModel.find({ author: authorId }).populate(
             "author",
-            "firstName lastName"
+            "firstName lastName profileImageUrl"
         );
         res.status(200).json({ message: "Articles fetched", payload: articles });
     } catch (err) {
@@ -69,8 +69,8 @@ authorRoute.get('/article/:id', verifyToken('AUTHOR'), async (req, res) => {
     try {
         const { id } = req.params;
         const article = await ArticleModel.findOne({ _id: id, author: req.user.userId })
-            .populate("author", "firstName lastName")
-            .populate("comments.user", "firstName lastName");
+            .populate("author", "firstName lastName profileImageUrl")
+            .populate("comments.user", "firstName lastName profileImageUrl");
 
         if (!article) return res.status(404).json({ message: "Article not found" });
 

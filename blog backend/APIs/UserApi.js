@@ -43,7 +43,7 @@ userRoute.get("/articles", verifyToken('USER'), async (req, res) => {
     try {
         let articles = await ArticleModel.find({ isArticleActive: true }).populate(
             "author",
-            "firstName lastName"
+            "firstName lastName profileImageUrl"
         );
         res.status(200).json({ message: "Articles fetched", payload: articles });
     } catch (err) {
@@ -64,8 +64,8 @@ userRoute.post("/comment/:articleId", verifyToken('USER'), async (req, res) => {
             { $push: { comments: { user: userId, comment } } },
             { new: true }
         )
-            .populate("comments.user", "firstName lastName")
-            .populate("author", "firstName lastName");
+            .populate("comments.user", "firstName lastName profileImageUrl")
+            .populate("author", "firstName lastName profileImageUrl");
 
         if (!updatedArticle) {
             return res.status(404).json({ message: "Article not found" });
@@ -85,8 +85,8 @@ userRoute.get("/article/:id", verifyToken('USER'), async (req, res) => {
     try {
         const { id } = req.params;
         const article = await ArticleModel.findById(id)
-            .populate("author", "firstName lastName")
-            .populate("comments.user", "firstName lastName");
+            .populate("author", "firstName lastName profileImageUrl")
+            .populate("comments.user", "firstName lastName profileImageUrl");
 
         if (!article) {
             return res.status(404).json({ message: "Article not found" });

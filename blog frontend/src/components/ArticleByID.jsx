@@ -16,6 +16,7 @@ function ArticleByID() {
   const location = useLocation();
   const navigate = useNavigate();
   const user = useAuth((state) => state.currentUser);
+  const isAuthChecked = useAuth((state) => state.isAuthChecked);
 
   const [article, setArticle] = useState(location.state || null);
   const [loading, setLoading] = useState(false);
@@ -24,33 +25,42 @@ function ArticleByID() {
   const [commentLoading, setCommentLoading] = useState(false);
 
   useEffect(() => {
-    if (article) return;
+    if (!isAuthChecked) return;
     const getArticle = async () => {
-      setLoading(true);
+      if (!article) setLoading(true);
       try {
-        const res = await userAPI.getArticleById(id);
+        const fetchAPI = user?.role === "AUTHOR" ? authorAPI : userAPI;
+        const res = await fetchAPI.getArticleById(id);
         setArticle(res.data.payload);
       } catch (err) {
-        setError(err.response?.data?.error);
+        if (!article) setError(err.response?.data?.error);
       } finally {
         setLoading(false);
       }
     };
     getArticle();
-  }, [id]);
+  }, [id, user?.role, isAuthChecked]);
 
-  const formatDate = (date) =>
-    new Date(date).toLocaleString("en-IN", {
+  const formatDate = (date) => {
+    if (!date) return "Recent";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "Recent";
+    return d.toLocaleString("en-IN", {
       timeZone: "Asia/Kolkata",
       dateStyle: "long",
       timeStyle: "short",
     });
+  };
 
-  const formatShortDate = (date) =>
-    new Date(date).toLocaleString("en-IN", {
+  const formatShortDate = (date) => {
+    if (!date) return "Recent";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "Recent";
+    return d.toLocaleString("en-IN", {
       timeZone: "Asia/Kolkata",
       dateStyle: "medium",
     });
+  };
 
   const deleteArticle = async () => {
     if (!window.confirm("Are you sure you want to delete this article?")) return;
@@ -165,12 +175,20 @@ function ArticleByID() {
           {/* Author Row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-b border-[#E5DDD0] py-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#606C38] to-[#283618] text-white text-sm font-bold flex items-center justify-center shadow">
-                {article.author?.firstName?.[0]?.toUpperCase() || "A"}
-              </div>
+              {article.author?.profileImageUrl ? (
+                <img
+                  src={article.author.profileImageUrl}
+                  alt={article.author.firstName}
+                  className="w-10 h-10 rounded-full object-cover shadow border border-[#E5DDD0]"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#606C38] to-[#283618] text-white text-sm font-bold flex items-center justify-center shadow">
+                  {article.author?.firstName?.[0]?.toUpperCase() || "A"}
+                </div>
+              )}
               <div>
                 <p className="font-semibold text-[#283618] text-sm">
-                  {article.author?.firstName || "Author"}
+                  {article.author ? `${article.author.firstName} ${article.author.lastName || ""}`.trim() : "Author"}
                 </p>
                 <p className="text-xs text-[#9CA3AF]">
                   {formatDate(article.createdAt)}
@@ -244,11 +262,19 @@ function ArticleByID() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#DDA15E] to-[#BC6C25] text-white text-xs font-bold flex items-center justify-center">
-                        {c.user?.firstName?.[0]?.toUpperCase() || "U"}
-                      </div>
+                      {c.user && typeof c.user === "object" && c.user.profileImageUrl ? (
+                        <img
+                          src={c.user.profileImageUrl}
+                          alt={c.user.firstName}
+                          className="w-8 h-8 rounded-full object-cover border border-[#E5DDD0]"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#DDA15E] to-[#BC6C25] text-white text-xs font-bold flex items-center justify-center">
+                          {(c.user && typeof c.user === "object" && c.user.firstName?.[0]?.toUpperCase()) || "U"}
+                        </div>
+                      )}
                       <p className="font-semibold text-[#283618] text-sm">
-                        {c.user?.firstName || "User"}
+                        {c.user && typeof c.user === "object" && c.user.firstName ? `${c.user.firstName} ${c.user.lastName || ""}`.trim() : "User"}
                       </p>
                     </div>
                     <p className="text-xs text-[#9CA3AF]">

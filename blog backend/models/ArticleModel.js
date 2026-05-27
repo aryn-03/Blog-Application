@@ -10,7 +10,7 @@ const userCommentSchema = new Schema({
     comment: {
         type: String,
     }
-})
+}, { timestamps: true })
 
 // create article Schema
 const articleSchema = new Schema({

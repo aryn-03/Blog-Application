@@ -5,6 +5,7 @@ export const useAuth = create((set) => ({
   currentUser: null,
   loading: false,
   isAuthenticated: false,
+  isAuthChecked: false,
   error: null,
   login: async (userCredWithRole) => {
     const { role, ...userCredObj } = userCredWithRole;
@@ -60,6 +61,7 @@ export const useAuth = create((set) => ({
       set({
         currentUser: res.data.payload,
         isAuthenticated: true,
+        isAuthChecked: true,
       });
     } catch (err) {
       // If user is not logged in → do nothing
@@ -67,12 +69,14 @@ export const useAuth = create((set) => ({
         set({
           currentUser: null,
           isAuthenticated: false,
+          isAuthChecked: true,
         });
         return;
       }
 
       // other errors
       console.error("Auth check failed:", err);
+      set({ isAuthChecked: true });
     }
   },
 }));
